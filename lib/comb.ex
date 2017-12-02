@@ -1,51 +1,57 @@
 defmodule Comb do
-
+  @change_id_url "https://api.poe.ninja/api/Data/GetStats"
+  @trade_api_url "http://www.pathofexile.com/api/public-stash-tabs?id="
   @moduledoc """
   Documentation for Comb.
   """
 
   @doc """
-  Hello world.
+  Application starting point.
 
   ## Examples
 
-      iex> Comb.hello
-      :world
+      iex> Comb.main
+      Requesting current change ID...
 
   """
   def main do
-    fetch_change_id()
+    HTTPotion.start()
+
+    fetch_initial_change_id()
     |> fetch_trade_stream()
   end
 
-  def fetch_trade_stream(id) do
-    IO.puts "Requesting trade stream with ID: #{id}..."
+  def scan(stashes) do
+    count = Enum.count(stashes)
+    IO.puts "Stashes updated: #{count}"
 
-    %HTTPoison.Response{body: body} = HTTPoison.get! const("trade_api_url")
-
-    %{"stashes" => stashes} = Poison.decode!(body)
-
-    IO.inspect(stashes, limit: :infinity)
-
-
+    Enum.each(stashes, fn(stash) ->
+      %{"accountName" => accountName} = stash
+      IO.inspect accountName
+    end)
   end
 
-  def fetch_change_id do
-    IO.puts "Requesting current change ID..."
+  def fetch_trade_stream(id) do
+    message("Requesting trade stream with ID: #{id}...")
+
+    %{"next_change_id" => next_change_id, "stashes" => stashes} =
+      HTTPotion.get(@trade_api_url <> id, [timeout: 50_000]).body()
+      |> Poison.decode!
+
+    scan(stashes)
+
+    fetch_trade_stream(next_change_id)
+  end
+
+  def fetch_initial_change_id do
+    IO.puts "Requesting initial change ID..."
     HTTPoison.start
 
-    %HTTPoison.Response{body: body} = HTTPoison.get! const("change_id_url")
+    %HTTPoison.Response{body: body} = HTTPoison.get! @change_id_url
 
     %{"next_change_id" => next_change_id} = Poison.decode!(body)
 
     next_change_id
-  end
-
-  def const(key) do
-    case key do
-      "change_id_url" -> "https://api.poe.ninja/api/Data/GetStats"
-      "trade_api_url" -> "http://www.pathofexile.com/api/public-stash-tabs?id="
-    end
   end
 
   def alert(message) do

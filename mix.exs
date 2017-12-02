@@ -14,7 +14,8 @@ defmodule Comb.Mixfile do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      applications: [:httpotion],
+      extra_applications: [:logger, :httpotion]
     ]
   end
 
@@ -22,7 +23,8 @@ defmodule Comb.Mixfile do
   defp deps do
     [
       {:poison, "~> 3.1"},
-      {:httpoison, "~> 0.13"}
+      {:httpoison, "~> 0.13"},
+      {:httpotion, "~> 3.0.2"}
     ]
   end
 end
