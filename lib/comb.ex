@@ -26,13 +26,30 @@ defmodule Comb do
     IO.puts "Stashes updated: #{count}"
 
     Enum.each(stashes, fn(stash) ->
-      %{"accountName" => accountName} = stash
-      IO.inspect accountName
+      %{
+        "lastCharacterName" => lastCharacterName,
+        "stashType" => stashType,
+        "stash" => stash,
+        "items" => items,
+      } = stash
+
+      IO.inspect(lastCharacterName)
+
+      if lastCharacterName != nil && String.downcase(lastCharacterName) == "ifukcforgodexile" do
+        IO.inspect items
+      end
+
     end)
+
+    if count < 5 do
+      :timer.sleep(1150)
+    end
   end
 
   def fetch_trade_stream(id) do
-    message("Requesting trade stream with ID: #{id}...")
+    { _ , {h, m, s} } = :calendar.local_time
+
+    message("[#{h}:#{m}:#{s}] Requesting trade stream with ID: #{id}...")
 
     %{"next_change_id" => next_change_id, "stashes" => stashes} =
       HTTPotion.get(@trade_api_url <> id, [timeout: 50_000]).body()
