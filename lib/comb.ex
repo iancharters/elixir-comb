@@ -4,19 +4,19 @@
   @filter [
     %{
       :name => "Voll's Devotion",
-      :price => 5,
+      :price => 75,
       :currency => 'chaos',
       :modifiers => {},
     },
     %{
-      :name => "Nomic's Storm",
-      :price => 2,
+      :name => "Starforge",
+      :price => 4,
       :currency => 'exa',
       :modifiers => {}
     },
     %{
-      :name => "Ornament of the East",
-      :price => 9,
+      :name => "Tabula Rasa",
+      :price => 15,
       :currency => 'chaos',
       :modifiers => {}
     },
@@ -57,7 +57,7 @@
         %{"name" => ""} ->
           nil
         %{"name" => name, "note" => note, "w" => w, "h" => h, "league" => league, "typeLine" => item_type} ->
-          case note_valid?(List.first(String.split note, " ")) do
+          case note_valid?(String.split note, " ") do
             true ->
               item_name = String.split(name, ">")
                           |> List.last
@@ -66,6 +66,8 @@
 
               apply_filter({item_name, {price, currency}, item_type, w, h, lastCharacterName, stash, league}, @filter)
             false ->
+              nil
+              _ ->
               nil
           end
         _ ->
@@ -79,8 +81,13 @@
   def apply_filter({name, {price, currency}, type, w, h, player, stash, league} = params, filters) do
     Enum.each(filters, fn %{:name => fname, :price => fprice, :currency => fcurrency, :modifiers => fmodifiers} ->
       if String.downcase(name) == String.downcase(fname) do
-        send_tell(params)
-        alert("#{name} | #{price} | #{fcurrency}")
+        alert("FOUND: #{player} | #{price} #{currency}")
+        {iprice, _} = Float.parse(price)
+
+        if iprice <= fprice do
+          alert("ITEM FOUND: #{name} | #{price} #{fcurrency}")
+          send_tell(params)
+        end
         {fname, fprice, fcurrency, fmodifiers}
       end
     end)
@@ -109,7 +116,11 @@
   """
   def note_valid?(note) do
     # TODO: make sure these mongs don't do "~price FREE" or similar
-    String.contains?(note, "~b/o") or String.contains?(note, "~price")
+
+    if Enum.count(note) == 3 do
+      [prefix, _value, _currency] = note
+      String.contains?(prefix, "~b/o") or String.contains?(prefix, "~price")
+    end
   end
 
   @doc """
