@@ -56,15 +56,33 @@
       Enum.each(items, fn
         %{"name" => ""} ->
           nil
-        %{"name" => name, "note" => note, "w" => w, "h" => h, "league" => league, "typeLine" => item_type} ->
+        %{
+          "name" => name,
+          "note" => note,
+          "w" => w,
+          "h" => h,
+          "league" => league,
+          "typeLine" => item_type
+          } ->
           case note_valid?(String.split note, " ") do
             true ->
               item_name = String.split(name, ">")
                           |> List.last
 
-              [_, price, currency] = String.split(note, " ")
+              [_, item_price, item_currency] = String.split(note, " ")
 
-              apply_filter({item_name, {price, currency}, item_type, w, h, lastCharacterName, stash, league}, @filter)
+              #apply_filter({item_name, {item_price, item_currency}, item_type, w, h, lastCharacterName, stash, league}, @filter)
+              apply_filter(
+                %{
+                  :item => %{
+                    :name => item_name,
+                    :price => item_price,
+                    :currency => item_currency,
+                    :type => item_type
+                  },
+                },
+                @filter
+              )
             false ->
               nil
               _ ->
@@ -78,19 +96,23 @@
     :timer.sleep(500)
   end
 
-  def apply_filter({name, {price, currency}, type, w, h, player, stash, league} = params, filters) do
-    Enum.each(filters, fn %{:name => fname, :price => fprice, :currency => fcurrency, :modifiers => fmodifiers} ->
-      if String.downcase(name) == String.downcase(fname) do
-        alert("FOUND: #{player} | #{price} #{currency}")
-        {iprice, _} = Float.parse(price)
+  # def apply_filter({name, {price, currency}, type, w, h, player, stash, league} = params, filters) do
+  #   Enum.each(filters, fn %{:name => fname, :price => fprice, :currency => fcurrency, :modifiers => fmodifiers} ->
+  #     if String.downcase(name) == String.downcase(fname) do
+  #       alert("FOUND: #{player} | #{price} #{currency}")
+  #       {iprice, _} = Float.parse(price)
+  #
+  #       if iprice <= fprice do
+  #         alert("ITEM FOUND: #{name} | #{price} #{fcurrency}")
+  #         send_tell(params)
+  #       end
+  #       {fname, fprice, fcurrency, fmodifiers}
+  #     end
+  #   end)
+  # end
 
-        if iprice <= fprice do
-          alert("ITEM FOUND: #{name} | #{price} #{fcurrency}")
-          send_tell(params)
-        end
-        {fname, fprice, fcurrency, fmodifiers}
-      end
-    end)
+  def apply_filter(%{}, @filter) do
+
   end
 
   @doc """
